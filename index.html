@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Intelligence Portal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+                </svg>
+                <span>Research Intelligence</span>
+            </div>
+            <div class="version">v1.0</div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="header">
+            <h1>Analyze Document</h1>
+            <p class="subtitle">Upload a financial PDF or earnings transcript for AI-powered extraction.</p>
+        </header>
+
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-box" id="uploadBox">
+                <div class="upload-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <h3>Drop your PDF here, or <span class="browse-link" onclick="document.getElementById('fileInput').click()">browse</span></h3>
+                <p class="file-limit">PDF files only • Max 50MB</p>
+                <input type="file" id="fileInput" accept=".pdf,.txt" hidden>
+            </div>
+
+            <div class="file-selected" id="fileSelected" style="display: none;">
+                <div class="file-info">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                        <polyline points="13 2 13 9 20 9"></polyline>
+                    </svg>
+                    <span id="fileName"></span>
+                </div>
+                <button class="remove-btn" onclick="removeFile()">×</button>
+            </div>
+        </div>
+
+        <div class="analysis-section">
+            <h3 class="section-title">ANALYSIS TYPE</h3>
+            <div class="analysis-cards">
+                <div class="analysis-card" data-type="financial" onclick="selectAnalysis('financial')">
+                    <div class="card-header">
+                        <input type="radio" name="analysis" id="financial" value="financial">
+                        <label for="financial">Financial Statement Extraction</label>
+                    </div>
+                    <p class="card-description">
+                        Extract structured financial statements (Income Statement, Balance Sheet, Cash Flow) with line-item 
+                        detail, multi-year comparisons, and confidence scoring.
+                    </p>
+                </div>
+
+                <div class="analysis-card active" data-type="earnings" onclick="selectAnalysis('earnings')">
+                    <div class="card-header">
+                        <input type="radio" name="analysis" id="earnings" value="earnings" checked>
+                        <label for="earnings">Earnings Call / Management Commentary Summary</label>
+                    </div>
+                    <p class="card-description">
+                        Analyze management tone, extract key positives/concerns, forward guidance, capacity utilization,
+                        and growth initiatives from earnings transcripts.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <button class="analyze-btn" id="analyzeBtn" onclick="analyzeDocument()" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Analyze Document
+        </button>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p id="loadingText">Analyzing document with AI...</p>
+        </div>
+
+        <div id="results" style="display: none;"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

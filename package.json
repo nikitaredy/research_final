@@ -1,0 +1,19 @@
+{
+  "name": "research-intelligence-portal",
+  "version": "1.0.0",
+  "description": "AI-powered research tools for financial analysis",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "groq-sdk": "^0.7.0",
+    "pdf-parse": "^1.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
