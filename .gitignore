@@ -1,8 +1,23 @@
+# Dependencies
 node_modules/
-uploads/
-.env.local
+
+# Environment variables
 .env
-.vercel
+.env.local
+
+# Upload & Generated Files
+uploads/
+ocr_output/
+
+# Vercel
+.vercel/
+
+# Logs
 *.log
+
+# OS Files
 .DS_Store
+
+# Generated Excel Files
 *.xlsx
+

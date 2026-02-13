@@ -10,8 +10,14 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "exceljs": "^4.4.0",
+    "fs": "^0.0.1-security",
     "groq-sdk": "^0.7.0",
-    "pdf-parse": "^1.1.1"
+    "path": "^0.12.7",
+    "pdf-parse": "^1.1.4",
+    "pdf-poppler": "^0.2.3",
+    "pdfjs-dist": "^3.11.174",
+    "sharp": "^0.34.5",
+    "tesseract.js": "^7.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
