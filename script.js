@@ -1,93 +1,240 @@
+// script.js - Enhanced with proper file upload handling
 let selectedFile = null;
-let analysisType = 'earnings'; // Default
+let analysisType = 'earnings';
 
-// File upload handling
-const uploadBox = document.getElementById('uploadBox');
+// DOM Elements
+const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
+const uploadState = document.getElementById('uploadState');
 const fileSelected = document.getElementById('fileSelected');
 const fileName = document.getElementById('fileName');
+const fileMeta = document.getElementById('fileMeta');
 const analyzeBtn = document.getElementById('analyzeBtn');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const resultsDiv = document.getElementById('results');
+const toastContainer = document.getElementById('toastContainer');
 
-// Drag and drop
-uploadBox.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadBox.classList.add('dragover');
-});
+// Initialize event listeners
+function init() {
+    // File upload handling
+    uploadArea.addEventListener('click', (e) => {
+        // Don't trigger if clicking remove button
+        if (!e.target.closest('.remove-file')) {
+            fileInput.click();
+        }
+    });
 
-uploadBox.addEventListener('dragleave', () => {
-    uploadBox.classList.remove('dragover');
-});
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
 
-uploadBox.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadBox.classList.remove('dragover');
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        handleFile(files[0]);
-    }
-});
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
 
-uploadBox.addEventListener('click', () => {
-    fileInput.click();
-});
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
 
-fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-        handleFile(e.target.files[0]);
-    }
-});
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
 
-function handleFile(file) {
+    // Remove file button
+    document.getElementById('removeFileBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeFile();
+    });
+
+    // Browse button
+    document.getElementById('browseBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        fileInput.click();
+    });
+
+    // Analysis card selection
+    document.querySelectorAll('.analysis-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const type = card.dataset.type;
+            selectAnalysis(type);
+        });
+    });
+
+    // Analyze button
+    analyzeBtn.addEventListener('click', analyzeDocument);
+}
+
+// Handle file selection
+function handleFileSelect(file) {
+    // Validate file type
     const validTypes = ['application/pdf', 'text/plain'];
-    if (!validTypes.includes(file.type)) {
-        alert('Please upload a PDF or TXT file');
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    
+    if (!validTypes.includes(file.type) && !['pdf', 'txt'].includes(fileExt)) {
+        showToast('Please upload a PDF or TXT file', 'error');
+        return;
+    }
+
+    // Validate file size (50MB max)
+    if (file.size > 50 * 1024 * 1024) {
+        showToast('File size must be less than 50MB', 'error');
         return;
     }
 
     selectedFile = file;
+    
+    // Update UI
     fileName.textContent = file.name;
-    fileSelected.style.display = 'flex';
-    document.getElementById('uploadSection').querySelector('.upload-box').style.display = 'none';
+    
+    // Format file size
+    const fileSize = formatFileSize(file.size);
+    const fileType = file.name.split('.').pop().toUpperCase();
+    fileMeta.textContent = `${fileSize} · ${fileType}`;
+    
+    // Show selected file state
+    uploadState.style.display = 'none';
+    fileSelected.style.display = 'block';
+    
+    // Enable analyze button
     analyzeBtn.disabled = false;
+    
+    showToast('File uploaded successfully', 'success');
 }
 
+// Format file size
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+// Remove file
 function removeFile() {
     selectedFile = null;
     fileInput.value = '';
+    
+    // Update UI
+    uploadState.style.display = 'block';
     fileSelected.style.display = 'none';
-    document.getElementById('uploadSection').querySelector('.upload-box').style.display = 'block';
+    
+    // Disable analyze button
     analyzeBtn.disabled = true;
+    
+    showToast('File removed', 'info');
 }
 
+// Select analysis type
 function selectAnalysis(type) {
     analysisType = type;
+    
+    // Update UI
     document.querySelectorAll('.analysis-card').forEach(card => {
         card.classList.remove('active');
+        const radio = card.querySelector('.radio-custom');
+        radio.classList.remove('checked');
     });
-    document.querySelector(`[data-type="${type}"]`).classList.add('active');
+    
+    const selectedCard = document.querySelector(`[data-type="${type}"]`);
+    selectedCard.classList.add('active');
+    const radio = selectedCard.querySelector('.radio-custom');
+    radio.classList.add('checked');
+    
+    // Update radio input
     document.getElementById(type).checked = true;
 }
 
-async function analyzeDocument() {
-    if (!selectedFile) return;
-
-    const formData = new FormData();
-    formData.append('document', selectedFile);
-    formData.append('analysisType', analysisType);
-
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('results').style.display = 'none';
+// Show toast notification
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            ${type === 'success' ? '<path d="M20 6L9 17l-5-5"/>' : ''}
+            ${type === 'error' ? '<circle cx="12" cy="12" r="10"/><path d="M12 8v8M12 16h.01"/>' : ''}
+            ${type === 'info' ? '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>' : ''}
+        </svg>
+        <span>${message}</span>
+    `;
     
-    const loadingText = document.getElementById('loadingText');
-    loadingText.textContent = analysisType === 'financial' 
-        ? 'Extracting financial data with DeepSeek...' 
-        : 'Analyzing earnings call with Groq...';
+    toastContainer.appendChild(toast);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+// Update loading progress
+function updateLoadingProgress(step, message) {
+    const steps = document.querySelectorAll('.step');
+    steps.forEach((s, index) => {
+        if (index < step) {
+            s.classList.add('active');
+        } else {
+            s.classList.remove('active');
+        }
+    });
+    
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = (step * 25) + '%';
+    
+    document.getElementById('loadingMessage').textContent = message;
+}
+
+// Analyze document
+async function analyzeDocument() {
+    if (!selectedFile) {
+        showToast('Please select a file first', 'error');
+        return;
+    }
+
+    // Show loading overlay
+    loadingOverlay.style.display = 'flex';
+    resultsDiv.style.display = 'none';
+    
+    // Update loading messages based on analysis type
+    const loadingTitle = document.getElementById('loadingTitle');
+    const loadingMessage = document.getElementById('loadingMessage');
+    
+    if (analysisType === 'financial') {
+        loadingTitle.textContent = 'Extracting Financial Data';
+        loadingMessage.textContent = 'Using AI to extract precise financial numbers...';
+    } else {
+        loadingTitle.textContent = 'Analyzing Earnings Call';
+        loadingMessage.textContent = 'Processing transcript for insights...';
+    }
+
+    // Simulate progress steps
+    let step = 1;
+    const progressInterval = setInterval(() => {
+        if (step < 4) {
+            updateLoadingProgress(step, getLoadingMessage(step));
+            step++;
+        }
+    }, 2000);
 
     try {
+        const formData = new FormData();
+        formData.append('document', selectedFile);
+        formData.append('analysisType', analysisType);
+
         const response = await fetch('/api/analyze', {
             method: 'POST',
             body: formData
         });
+
+        clearInterval(progressInterval);
+        updateLoadingProgress(4, 'Complete!');
 
         const data = await response.json();
 
@@ -95,17 +242,43 @@ async function analyzeDocument() {
             throw new Error(data.error || 'Analysis failed');
         }
 
-        displayResults(data);
+        // Small delay to show completion
+        setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+            displayResults(data);
+            showToast('Analysis complete!', 'success');
+        }, 1000);
+
     } catch (error) {
-        alert('Error: ' + error.message);
-    } finally {
-        document.getElementById('loading').style.display = 'none';
+        clearInterval(progressInterval);
+        loadingOverlay.style.display = 'none';
+        showToast('Error: ' + error.message, 'error');
     }
 }
 
+// Get loading message for each step
+function getLoadingMessage(step) {
+    if (analysisType === 'financial') {
+        const messages = [
+            'Reading document and detecting tables...',
+            'Extracting line items with precision...',
+            'Preserving exact numbers and decimals...',
+            'Formatting data for Excel export...'
+        ];
+        return messages[step - 1];
+    } else {
+        const messages = [
+            'Analyzing management tone...',
+            'Extracting key positives and concerns...',
+            'Identifying forward guidance...',
+            'Generating summary report...'
+        ];
+        return messages[step - 1];
+    }
+}
+
+// Display results (keeping your original display logic but with better styling)
 function displayResults(data) {
-    const resultsDiv = document.getElementById('results');
-    
     if (data.analysisType === 'earnings') {
         resultsDiv.innerHTML = generateEarningsHTML(data.analysis);
     } else {
@@ -113,9 +286,10 @@ function displayResults(data) {
     }
     
     resultsDiv.style.display = 'block';
-    resultsDiv.scrollIntoView({ behavior: 'smooth' });
+    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// Your existing HTML generation functions (keep them exactly as you had)
 function generateEarningsHTML(analysis) {
     return `
         <div class="result-header">
@@ -293,6 +467,8 @@ function getConfidenceColor(confidence) {
 }
 
 function downloadExcel() {
-    // Trigger Excel download
     window.location.href = '/api/download-excel';
 }
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', init);

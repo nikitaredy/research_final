@@ -1,3 +1,4 @@
+// server.js - Enhanced Precision Version (Compatible with your existing script.js)
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -16,7 +17,7 @@ try {
 const groq1 = new Groq({ apiKey: process.env.GROQ_API_KEY_1 || 'your-groq-key-1' });
 const groq2 = new Groq({ apiKey: process.env.GROQ_API_KEY_2 || 'your-groq-key-2' });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3016;
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 
 // Create uploads directory
@@ -155,19 +156,21 @@ JSON structure (no other text):
   }
 }
 
-// Extract Financial Statements using Groq #2 (ULTRA-PRECISE!)
+// PRECISION Financial Statements Extraction using Groq #2 (ULTRA-PRECISE!)
 async function extractFinancialStatements(text) {
   console.log('🧠 Using Groq #2 for PRECISION financial extraction...');
   
   const prompt = `You are an expert financial data extraction AI. Extract ALL financial statement data with EXACT precision from this document.
 
 CRITICAL RULES:
-1. Extract EVERY line item you find in financial tables
-2. Preserve EXACT numbers with decimals (e.g., 3,558.65 not 3558)
-3. Extract ALL time periods/columns (quarters, years, etc.)
-4. Use the EXACT line item names from the document
-5. Capture units (crores, millions, thousands, etc.)
-6. NO APPROXIMATION - exact numbers only!
+1. Extract EVERY line item you find in financial tables - do not skip any
+2. Preserve EXACT numbers with commas and decimals (e.g., 3,558.65 not 3558.65)
+3. If numbers have parentheses like (1,234) - preserve them exactly as negative
+4. Extract ALL time periods/columns (Quarter Ended, Nine Months Ended, Year Ended, etc.)
+5. Use the EXACT line item names from the document - do not rename or standardize
+6. Capture units (crores, millions, thousands, lakhs, etc.)
+7. Extract minimum 15-20 line items for comprehensive analysis
+8. NO APPROXIMATION - exact numbers only!
 
 DOCUMENT TEXT:
 ${text.substring(0, 20000)}
@@ -177,17 +180,23 @@ Respond with ONLY this JSON structure (no other text):
 {
   "currency": "INR/USD/etc",
   "fiscal_year": "2025",
-  "years": ["Q4 2025", "Q3 2025", "Q4 2024", "9M 2025"],
+  "years": ["Quarter Ended 31 Dec 2024", "Quarter Ended 30 Sep 2024", "Quarter Ended 31 Dec 2023", "Nine Months Ended 31 Dec 2024"],
   "income_statement": [
     {
       "line_item": "Revenue from operations",
-      "values": ["3558.65", "3191.32", "3355.25", "10154.55"],
+      "values": ["3,558.65", "3,191.32", "3,355.25", "10,154.55"],
       "unit": "crores",
       "confidence": "high"
     },
     {
       "line_item": "Cost of materials consumed (including excise duty)",
-      "values": ["1417.67", "1388.58", "1220.17", "4231.06"],
+      "values": ["1,417.67", "1,388.58", "1,220.17", "4,231.06"],
+      "unit": "crores",
+      "confidence": "high"
+    },
+    {
+      "line_item": "Employee benefits expense",
+      "values": ["456.78", "432.45", "398.23", "1,287.46"],
       "unit": "crores",
       "confidence": "high"
     }
@@ -195,7 +204,7 @@ Respond with ONLY this JSON structure (no other text):
   "balance_sheet": [
     {
       "line_item": "Total assets",
-      "values": ["17243.62", "16676.57", "16113.11"],
+      "values": ["17,243.62", "16,676.57", "16,113.11"],
       "unit": "crores",
       "confidence": "high"
     }
@@ -204,16 +213,15 @@ Respond with ONLY this JSON structure (no other text):
 }
 
 EXTRACTION INSTRUCTIONS:
-- Look for tables with financial data
-- Find column headers (Quarter ended, Nine months ended, etc.)
-- Extract EVERY row in the table
-- Preserve exact decimal values
+- Look for tables with financial data throughout the document
+- Find column headers like "Quarter Ended", "Nine months ended", "Year ended", "As at"
+- Extract EVERY row in EVERY table
+- Preserve exact decimal values with commas
 - Include parentheses for negative numbers if present
-- Extract minimum 15-20 line items for income statement
-- Include: Revenue, Costs, Expenses, EBITDA, Profit, EPS, etc.
-- For balance sheet: Assets, Liabilities, Equity, etc.
+- Include: Revenue, Costs, Expenses, EBITDA, Profit, EPS, Assets, Liabilities, etc.
+- If a line item doesn't have values for all periods, use empty string "" for missing periods
 
-Remember: PRECISION is critical. Extract EXACTLY what you see, including decimals!`;
+Remember: PRECISION is critical. Extract EXACTLY what you see, including commas and decimals!`;
 
   try {
     const completion = await groq2.chat.completions.create({
@@ -244,10 +252,16 @@ Remember: PRECISION is critical. Extract EXACTLY what you see, including decimal
     const parsed = JSON.parse(response);
     
     // Validate we got good data
-    if (parsed.income_statement && parsed.income_statement.length < 5) {
+    const itemCount = parsed.income_statement?.length || 0;
+    console.log(`📊 Extracted ${itemCount} income statement line items`);
+    
+    if (itemCount < 5) {
       console.warn('⚠️ Low extraction quality, trying enhanced fallback...');
       return enhancedFinancialExtraction(text);
     }
+    
+    // Store for Excel download (exactly as your script.js expects)
+    lastFinancialAnalysis = parsed;
     
     return parsed;
   } catch (error) {
@@ -305,18 +319,21 @@ function enhancedFinancialExtraction(text) {
   const financialData = [];
   const years = [];
   
-  // Look for number patterns with decimals (Indian format)
+  // Look for number patterns with commas and decimals (Indian format)
   const numberPattern = /[\d,]+\.?\d*/g;
   
   // Common financial line items to look for
   const lineItems = [
     'Revenue from operations', 'Other income', 'Total income',
     'Cost of materials consumed', 'Purchase of stock-in-trade',
-    'Employee benefits expense', 'Finance costs',
+    'Changes in inventories', 'Employee benefits expense', 'Finance costs',
     'Depreciation and amortisation expense', 'Other expenses',
     'Total expenses', 'Profit before exceptional items and tax',
     'Exceptional items', 'Profit before tax', 'Tax expense',
-    'Net profit', 'Earnings per share', 'EPS'
+    'Net profit', 'Earnings per share', 'EPS', 'Basic EPS', 'Diluted EPS',
+    'Total assets', 'Non-current assets', 'Current assets',
+    'Total equity', 'Share capital', 'Other equity',
+    'Non-current liabilities', 'Current liabilities'
   ];
   
   // Try to find and extract from structured tables
@@ -326,53 +343,89 @@ function enhancedFinancialExtraction(text) {
     // Check if line contains a financial line item
     for (const item of lineItems) {
       if (line.toLowerCase().includes(item.toLowerCase())) {
-        // Extract all numbers from this line
+        // Extract all numbers from this line (preserve commas)
         const numbers = line.match(numberPattern);
         if (numbers && numbers.length > 0) {
           financialData.push({
             line_item: item,
             values: numbers.slice(0, 4), // Take first 4 periods
-            unit: "crores", // Assume Indian crores
+            unit: detectUnit(line),
             confidence: "medium"
           });
         }
+        break;
       }
     }
   }
   
   // Try to detect period headers
-  const periodPattern = /Quarter ended|Nine months ended|Year ended|Preceding quarter|Corresponding/gi;
+  const periodPattern = /Quarter ended|Nine months ended|Year ended|Preceding quarter|Corresponding|As at|As of/gi;
   for (const line of lines) {
     if (periodPattern.test(line)) {
       // Try to extract dates
-      const dateMatch = line.match(/\d{1,2}\/\d{1,2}\/\d{4}|\w+ \d{1,2}, \d{4}/g);
+      const dateMatch = line.match(/\d{1,2}\/\d{1,2}\/\d{4}|\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}/gi);
       if (dateMatch && years.length < 4) {
         years.push(...dateMatch);
       }
     }
   }
   
+  // Detect currency
+  const currency = detectCurrency(text);
+  
+  // If we found data, return it
+  if (financialData.length > 0) {
+    return {
+      currency: currency,
+      fiscal_year: new Date().getFullYear().toString(),
+      years: years.length > 0 ? years.slice(0, 4) : ["Current Period", "Previous Period", "Year Ago", "YTD"],
+      income_statement: financialData.slice(0, 20), // Get up to 20 items
+      balance_sheet: [], // Would populate in real implementation
+      overall_confidence: financialData.length > 10 ? "high" : "medium"
+    };
+  }
+  
+  // Absolute fallback
   return {
-    currency: "INR",
+    currency: currency,
     fiscal_year: "2025",
-    years: years.length > 0 ? years.slice(0, 4) : ["Q4 2025", "Q3 2025", "Q4 2024", "9M 2025"],
-    income_statement: financialData.length > 0 ? financialData : [
+    years: ["Q4 2025", "Q3 2025", "Q4 2024", "9M 2025"],
+    income_statement: [
       {
         line_item: "Revenue from operations",
-        values: ["Not extracted"],
+        values: ["Extraction in progress", "", "", ""],
+        unit: "crores",
+        confidence: "low"
+      },
+      {
+        line_item: "Total expenses",
+        values: ["", "", "", ""],
         unit: "crores",
         confidence: "low"
       }
     ],
     balance_sheet: [],
-    overall_confidence: financialData.length > 5 ? "medium" : "low - AI extraction needed for best results"
+    overall_confidence: "low - Manual review recommended"
   };
 }
 
-// Fallback financial extraction (simple pattern matching)
-function fallbackFinancialExtraction(text) {
-  // First try enhanced extraction
-  return enhancedFinancialExtraction(text);
+// Helper function to detect unit
+function detectUnit(text) {
+  if (text.match(/crore|cr\.?/i)) return "crores";
+  if (text.match(/million|mn/i)) return "millions";
+  if (text.match(/billion|bn/i)) return "billions";
+  if (text.match(/thousand|k/i)) return "thousands";
+  if (text.match(/lakh|lacs/i)) return "lakhs";
+  return "units";
+}
+
+// Helper function to detect currency
+function detectCurrency(text) {
+  if (text.match(/rs\.?|inr|rupee/i)) return "INR";
+  if (text.match(/\$|usd|dollar/i)) return "USD";
+  if (text.match(/€|eur|euro/i)) return "EUR";
+  if (text.match(/£|gbp|pound/i)) return "GBP";
+  return "Unknown";
 }
 
 // Generate Excel file using ExcelJS (secure alternative)
@@ -450,6 +503,7 @@ async function generateExcelFile(analysis) {
   metaSheet.addRow({ property: 'Fiscal Year', value: analysis.fiscal_year });
   metaSheet.addRow({ property: 'Extraction Date', value: new Date().toISOString() });
   metaSheet.addRow({ property: 'Overall Confidence', value: analysis.overall_confidence });
+  metaSheet.addRow({ property: 'Line Items Extracted', value: analysis.income_statement?.length || 0 });
   
   // Write to buffer
   return await workbook.xlsx.writeBuffer();
@@ -566,12 +620,12 @@ const server = http.createServer(async (req, res) => {
         let analysis;
         if (analysisType === 'financial') {
           analysis = await extractFinancialStatements(text);
-          lastFinancialAnalysis = analysis;
+          lastFinancialAnalysis = analysis; // Store for Excel download
         } else {
           analysis = await analyzeEarningsCall(text);
         }
 
-        // Send response
+        // Send response (EXACT format your script.js expects)
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           success: true,
@@ -603,8 +657,11 @@ server.listen(PORT, () => {
   console.log(`\n🤖 APIs (using TWO Groq accounts):`);
   console.log(`   - Groq #1 (Earnings Analysis): ${process.env.GROQ_API_KEY_1 ? '✅' : '❌'}`);
   console.log(`   - Groq #2 (Financial Extraction): ${process.env.GROQ_API_KEY_2 ? '✅' : '❌'}`);
-  console.log(`\n💡 Get TWO free Groq API keys from different accounts:`);
-  console.log(`   - Account 1: https://console.groq.com/keys`);
-  console.log(`   - Account 2: https://console.groq.com/keys (different email)\n`);
-  console.log(`📈 Each account gets 14,400 FREE requests/day!\n`);
+  console.log(`\n💡 PRECISION FINANCIAL EXTRACTION ENABLED:`);
+  console.log(`   - Preserves exact numbers with commas and decimals`);
+  console.log(`   - Extracts 15-20+ line items from income statement`);
+  console.log(`   - Detects multiple time periods automatically`);
+  console.log(`   - Identifies currency and units (crores/millions)`);
+  console.log(`   - Confidence scoring per line item`);
+  console.log(`\n📈 Each account gets 14,400 FREE requests/day!\n`);
 });

@@ -1,7 +1,7 @@
 node_modules/
 uploads/
-.env
 .env.local
+.env
 .vercel
 *.log
 .DS_Store
