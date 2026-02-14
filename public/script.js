@@ -225,7 +225,7 @@ async function analyzeDocument() {
 
     try {
         const formData = new FormData();
-        formData.append('document', selectedFile);
+        formData.append('file', selectedFile);
         formData.append('analysisType', analysisType);
 
         const response = await fetch('/api/analyze', {

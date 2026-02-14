@@ -21,3 +21,6 @@ ocr_output/
 # Generated Excel Files
 *.xlsx
 
+
+.vercel
+.env*.local
