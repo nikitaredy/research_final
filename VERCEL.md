@@ -22,6 +22,7 @@ The `@` symbol tells Vercel to look for environment variables you'll set in the 
 ### Option 1: Vercel Dashboard (Easiest)
 
 1. **Push to GitHub:**
+
 ```bash
 git init
 git add .
@@ -85,12 +86,14 @@ vercel --prod
 After deployment, check your Vercel dashboard:
 
 **Environment Variables should show:**
+
 ```
 GROQ_API_KEY_1  •••••••••••  Production, Preview, Development
 GROQ_API_KEY_2  •••••••••••  Production, Preview, Development
 ```
 
 **Your app will be live at:**
+
 ```
 https://your-project-name.vercel.app
 ```
@@ -100,12 +103,14 @@ https://your-project-name.vercel.app
 ## 🔧 Updating Environment Variables
 
 ### Via Dashboard:
+
 1. Go to Project Settings → Environment Variables
 2. Click "Edit" next to the variable
 3. Update the value
 4. Redeploy
 
 ### Via CLI:
+
 ```bash
 # Remove old variable
 vercel env rm GROQ_API_KEY_1
@@ -122,15 +127,19 @@ vercel --prod
 ## ❓ FAQ
 
 ### Q: Do I need to change `vercel.json`?
+
 **A:** No! It's already configured correctly. Just add your API keys as environment variables.
 
 ### Q: What does `@groq_api_key_1` mean?
+
 **A:** The `@` tells Vercel to use the environment variable you set. The name after `@` is just a reference - the actual variable name is `GROQ_API_KEY_1`.
 
 ### Q: Can I use different variable names?
+
 **A:** Yes, but you'd need to update both `vercel.json` AND `server.js`. Easier to keep the current names.
 
 ### Q: How do I keep my keys secret on GitHub?
+
 **A:** Your `.env.local` file is in `.gitignore`, so it won't be pushed to GitHub. Only `.env.example` (without real keys) is pushed.
 
 ---
@@ -140,6 +149,7 @@ vercel --prod
 Once environment variables are set in Vercel, your app will work perfectly in production!
 
 **Remember:**
+
 - `.env.local` - For local development (never commit!)
 - `vercel.json` - Configuration (commit this)
 - Vercel Dashboard/CLI - Set actual API keys here
