@@ -18,7 +18,7 @@
             <p>For <strong>scanned/image-based PDFs</strong>, please convert to TXT using <a href="https://www.pdf2go.com/pdf-to-text" target="_blank">PDF2Go OCR</a> first. Modern text-based PDFs work directly.</p>
             <details>
                 <summary>Why is this needed?</summary>
-                <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #a1a1aa;">
+                <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #94a3b8;">
                     Vercel serverless functions have CPU/memory limits that don't support OCR libraries like Tesseract. 
                     External OCR preprocessing allows us to deploy on free infrastructure while maintaining quality results.
                     <strong>Most modern financial reports are text-based PDFs and work without conversion.</strong>
@@ -31,13 +31,13 @@
 
 <style>
 .prerequisite-banner {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border-bottom: 2px solid #f59e0b;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8c 100%);
+    border-bottom: 2px solid #3b82f6;
     padding: 1rem;
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .prerequisite-content {
@@ -52,29 +52,36 @@
 .prerequisite-icon {
     font-size: 2rem;
     flex-shrink: 0;
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
 }
 
 .prerequisite-text h3 {
     margin: 0 0 0.5rem 0;
-    color: #92400e;
+    color: #e0e7ff;
     font-size: 1.1rem;
+    font-weight: 600;
 }
 
 .prerequisite-text p {
     margin: 0;
-    color: #78350f;
+    color: #cbd5e1;
     font-size: 0.95rem;
     line-height: 1.5;
 }
 
+.prerequisite-text strong {
+    color: #e0e7ff;
+}
+
 .prerequisite-text a {
-    color: #2563eb;
+    color: #60a5fa;
     text-decoration: underline;
     font-weight: 600;
+    transition: color 0.2s;
 }
 
 .prerequisite-text a:hover {
-    color: #1d4ed8;
+    color: #93c5fd;
 }
 
 .prerequisite-text details {
@@ -82,12 +89,17 @@
 }
 
 .prerequisite-text summary {
-    color: #92400e;
+    color: #93c5fd;
     cursor: pointer;
     font-weight: 600;
     font-size: 0.9rem;
     list-style: none;
     user-select: none;
+    transition: color 0.2s;
+}
+
+.prerequisite-text summary:hover {
+    color: #bfdbfe;
 }
 
 .prerequisite-text summary::-webkit-details-marker {
@@ -98,6 +110,7 @@
     content: '▶ ';
     display: inline-block;
     transition: transform 0.2s;
+    color: #60a5fa;
 }
 
 .prerequisite-text details[open] summary::before {
@@ -105,9 +118,9 @@
 }
 
 .close-banner {
-    background: none;
-    border: none;
-    color: #92400e;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #e0e7ff;
     font-size: 1.5rem;
     cursor: pointer;
     padding: 0;
@@ -116,13 +129,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
-    transition: background 0.2s;
+    border-radius: 6px;
+    transition: all 0.2s;
     flex-shrink: 0;
 }
 
 .close-banner:hover {
-    background: rgba(146, 64, 14, 0.1);
+    background: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.5);
+    transform: scale(1.05);
 }
 
 @media (max-width: 768px) {
