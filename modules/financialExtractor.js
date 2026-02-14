@@ -79,7 +79,12 @@ Respond with THIS EXACT JSON structure:
       const parsed = JSON.parse(response);
       
       // Enhance with table data if AI missed something
-      if (tables.incomeStatement.length > 0 && (!parsed.income_statement || parsed.income_statement.length < 5)) {
+      const needsEnhancement = 
+        (tables.incomeStatement.length > 0 && (!parsed.income_statement || parsed.income_statement.length < 5)) ||
+        (tables.balanceSheet.length > 0 && (!parsed.balance_sheet || parsed.balance_sheet.length < 5)) ||
+        (tables.cashFlow.length > 0 && (!parsed.cash_flow || parsed.cash_flow.length < 3));
+      
+      if (needsEnhancement) {
         console.log('⚠️ AI extraction sparse, enhancing with table data...');
         this.enhanceWithTableData(parsed, tables);
       }
@@ -93,17 +98,57 @@ Respond with THIS EXACT JSON structure:
   }
 
   enhanceWithTableData(parsed, tables) {
+    // Enhance Income Statement
     if (!parsed.income_statement) parsed.income_statement = [];
     
     tables.incomeStatement.forEach(table => {
       table.rows.forEach(row => {
-        // Check if line item already exists
         const exists = parsed.income_statement.some(
           item => item.line_item.toLowerCase() === row.line_item.toLowerCase()
         );
         
         if (!exists) {
           parsed.income_statement.push({
+            line_item: row.line_item,
+            values: row.values,
+            unit: parsed.unit || 'crores',
+            confidence: 'medium'
+          });
+        }
+      });
+    });
+    
+    // Enhance Balance Sheet (THIS WAS MISSING!)
+    if (!parsed.balance_sheet) parsed.balance_sheet = [];
+    
+    tables.balanceSheet.forEach(table => {
+      table.rows.forEach(row => {
+        const exists = parsed.balance_sheet.some(
+          item => item.line_item.toLowerCase() === row.line_item.toLowerCase()
+        );
+        
+        if (!exists) {
+          parsed.balance_sheet.push({
+            line_item: row.line_item,
+            values: row.values,
+            unit: parsed.unit || 'crores',
+            confidence: 'medium'
+          });
+        }
+      });
+    });
+    
+    // Enhance Cash Flow
+    if (!parsed.cash_flow) parsed.cash_flow = [];
+    
+    tables.cashFlow.forEach(table => {
+      table.rows.forEach(row => {
+        const exists = parsed.cash_flow.some(
+          item => item.line_item.toLowerCase() === row.line_item.toLowerCase()
+        );
+        
+        if (!exists) {
+          parsed.cash_flow.push({
             line_item: row.line_item,
             values: row.values,
             unit: parsed.unit || 'crores',
@@ -128,12 +173,42 @@ Respond with THIS EXACT JSON structure:
       extraction_notes: "Used fallback extraction method"
     };
     
-    // Use table data if available
+    // Use Income Statement table data if available
     if (tables.incomeStatement.length > 0) {
       tables.incomeStatement.forEach(table => {
-        result.years = table.periods;
+        if (result.years.length === 0) result.years = table.periods;
         table.rows.forEach(row => {
           result.income_statement.push({
+            line_item: row.line_item,
+            values: row.values,
+            unit: result.unit,
+            confidence: "medium"
+          });
+        });
+      });
+    }
+    
+    // Use Balance Sheet table data if available (THIS WAS MISSING!)
+    if (tables.balanceSheet.length > 0) {
+      tables.balanceSheet.forEach(table => {
+        if (result.years.length === 0) result.years = table.periods;
+        table.rows.forEach(row => {
+          result.balance_sheet.push({
+            line_item: row.line_item,
+            values: row.values,
+            unit: result.unit,
+            confidence: "medium"
+          });
+        });
+      });
+    }
+    
+    // Use Cash Flow table data if available
+    if (tables.cashFlow.length > 0) {
+      tables.cashFlow.forEach(table => {
+        if (result.years.length === 0) result.years = table.periods;
+        table.rows.forEach(row => {
+          result.cash_flow.push({
             line_item: row.line_item,
             values: row.values,
             unit: result.unit,

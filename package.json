@@ -1,15 +1,11 @@
 {
   "name": "research-intelligence-portal",
   "version": "2.0.0",
-  "description": "AI-powered financial analysis portal for Vercel",
-  "main": "api/index.js",
+  "description": "AI-powered financial analysis portal",
   "scripts": {
     "dev": "vercel dev",
     "deploy": "vercel --prod"
   },
-  "keywords": ["ai", "finance", "groq", "vercel"],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "groq-sdk": "^0.3.0"
   }

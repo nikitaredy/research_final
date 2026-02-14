@@ -1,4 +1,4 @@
-// api/index.js - Vercel Serverless Function
+// api/analyze.js - Vercel Serverless Function (keeps your existing UI)
 const Groq = require('groq-sdk');
 
 // Initialize Groq clients
@@ -43,11 +43,15 @@ function parseMultipart(buffer, boundary) {
   return parts;
 }
 
-// Simplified PDF text extraction (without external dependencies)
+// Simplified PDF text extraction
 function extractPdfText(buffer) {
-  const text = buffer.toString('utf-8');
-  // Basic cleanup for PDF text
-  return text.replace(/[^\x20-\x7E\n]/g, ' ').trim();
+  try {
+    const text = buffer.toString('utf-8');
+    return text.replace(/[^\x20-\x7E\n]/g, ' ').trim();
+  } catch (error) {
+    console.error('PDF extraction error:', error);
+    return '';
+  }
 }
 
 // Financial extraction with Groq
@@ -61,7 +65,7 @@ async function extractFinancialData(text) {
 
 ${text.substring(0, 12000)}
 
-Return this structure:
+Return this exact structure:
 {
   "incomeStatement": {
     "revenue": ["100M", "90M", "80M"],
@@ -107,7 +111,7 @@ async function analyzeEarnings(text) {
 
 ${text.substring(0, 10000)}
 
-Return:
+Return this exact structure:
 {
   "tone": "optimistic/neutral/concerned",
   "confidence": "high/medium/low",
@@ -133,7 +137,7 @@ Return:
   }
 }
 
-// Main handler
+// Main Vercel handler
 module.exports = async (req, res) => {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -204,7 +208,8 @@ module.exports = async (req, res) => {
       success: true,
       analysisType,
       filename: filePart.filename,
-      analysis
+      analysis,
+      ocrAvailable: false
     });
 
   } catch (error) {
