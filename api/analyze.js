@@ -56,35 +56,71 @@ async function extractFinancialData(text) {
       model: 'llama-3.3-70b-versatile',
       messages: [{
         role: 'user',
-        content: `Extract financial data and return ONLY valid JSON:
+        content: `Extract ALL financial data from this document. Look for BOTH Income Statement AND Balance Sheet.
 
-${text.substring(0, 12000)}
+DOCUMENT:
+${text.substring(0, 15000)}
 
-Return this structure:
+CRITICAL: Extract BOTH statements if they exist in the document.
+
+Return ONLY valid JSON with this structure:
 {
   "income_statement": [
     {
-      "line_item": "Revenue",
-      "values": ["1000", "900", "800"],
+      "line_item": "Revenue from operations",
+      "values": ["3558.65", "3191.32", "3355.25"],
       "unit": "crores",
       "confidence": "high"
     }
   ],
   "balance_sheet": [
     {
-      "line_item": "Total Assets",
+      "line_item": "Non-current assets",
       "values": ["5000", "4500", "4000"],
+      "unit": "crores", 
+      "confidence": "high"
+    },
+    {
+      "line_item": "Current assets",
+      "values": ["2000", "1800", "1600"],
+      "unit": "crores",
+      "confidence": "high"
+    },
+    {
+      "line_item": "Total assets",
+      "values": ["7000", "6300", "5600"],
+      "unit": "crores",
+      "confidence": "high"
+    },
+    {
+      "line_item": "Equity",
+      "values": ["4000", "3500", "3000"],
+      "unit": "crores",
+      "confidence": "high"
+    },
+    {
+      "line_item": "Non-current liabilities",
+      "values": ["2000", "1800", "1600"],
+      "unit": "crores",
+      "confidence": "high"
+    },
+    {
+      "line_item": "Current liabilities",
+      "values": ["1000", "1000", "1000"],
       "unit": "crores",
       "confidence": "high"
     }
   ],
-  "years": ["2024", "2023", "2022"],
+  "years": ["2025", "2024", "2023"],
   "currency": "INR",
-  "fiscal_year": "2023-24",
+  "fiscal_year": "2024-25",
   "overall_confidence": "high"
-}`
+}
+
+IMPORTANT: Even if Balance Sheet data is limited, include at least Total Assets, Total Liabilities, and Total Equity if they exist.`
       }],
-      temperature: 0.1
+      temperature: 0.1,
+      max_tokens: 4000
     });
 
     const content = response.choices[0].message.content.trim();
@@ -224,7 +260,70 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: 'Analysis failed. Please try again.' });
     }
 
+    // If balance sheet is empty but we have income statement, try to find balance sheet in the text
+    if (analysisType === 'financial' && 
+        analysis.income_statement && 
+        analysis.income_statement.length > 0 &&
+        (!analysis.balance_sheet || analysis.balance_sheet.length === 0)) {
+      
+      console.log('Balance sheet empty, checking if it exists in document...');
+      
+      // Check if document mentions balance sheet
+      const hasBalanceSheet = text.toLowerCase().includes('balance sheet') || 
+                             text.toLowerCase().includes('statement of financial position') ||
+                             text.toLowerCase().includes('total assets') ||
+                             text.toLowerCase().includes('shareholders equity');
+      
+      if (hasBalanceSheet) {
+        console.log('Balance sheet detected in document, re-extracting with focus on balance sheet...');
+        
+        // Try again with balance sheet specific prompt
+        const bsResponse = await groq2.chat.completions.create({
+          model: 'llama-3.3-70b-versatile',
+          messages: [{
+            role: 'user',
+            content: `Focus ONLY on extracting Balance Sheet / Statement of Financial Position from this text.
+
+${text.substring(0, 15000)}
+
+Return ONLY JSON array of balance sheet line items:
+{
+  "balance_sheet": [
+    {
+      "line_item": "Non-current assets",
+      "values": ["value1", "value2", "value3"],
+      "unit": "crores",
+      "confidence": "high"
+    }
+  ],
+  "years": ["2025", "2024", "2023"]
+}`
+          }],
+          temperature: 0.1,
+          max_tokens: 3000
+        });
+        
+        const bsContent = bsResponse.choices[0].message.content.trim();
+        const bsJsonMatch = bsContent.match(/\{[\s\S]*\}/);
+        
+        if (bsJsonMatch) {
+          const bsData = JSON.parse(bsJsonMatch[0]);
+          if (bsData.balance_sheet && bsData.balance_sheet.length > 0) {
+            analysis.balance_sheet = bsData.balance_sheet;
+            console.log('Balance sheet extracted:', bsData.balance_sheet.length, 'items');
+          }
+        }
+      }
+    }
+
     console.log('Analysis complete');
+    if (analysisType === 'financial') {
+  console.log('DEBUG - Income statement items:', analysis.income_statement?.length || 0);
+  console.log('DEBUG - Balance sheet items:', analysis.balance_sheet?.length || 0);
+  if (analysis.balance_sheet) {
+    console.log('DEBUG - Balance sheet data:', JSON.stringify(analysis.balance_sheet.slice(0, 2)));
+  }
+}
 
     // Return in the format your frontend expects
     return res.status(200).json({
