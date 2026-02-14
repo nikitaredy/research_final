@@ -8,6 +8,140 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Add this at the TOP of your index.html, right after <body> tag -->
+
+<div class="prerequisite-banner">
+    <div class="prerequisite-content">
+        <div class="prerequisite-icon">⚠️</div>
+        <div class="prerequisite-text">
+            <h3>Important: Scanned PDF Prerequisite</h3>
+            <p>For <strong>scanned/image-based PDFs</strong>, please convert to TXT using <a href="https://www.pdf2go.com/pdf-to-text" target="_blank">PDF2Go OCR</a> first. Modern text-based PDFs work directly.</p>
+            <details>
+                <summary>Why is this needed?</summary>
+                <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #a1a1aa;">
+                    Vercel serverless functions have CPU/memory limits that don't support OCR libraries like Tesseract. 
+                    External OCR preprocessing allows us to deploy on free infrastructure while maintaining quality results.
+                    <strong>Most modern financial reports are text-based PDFs and work without conversion.</strong>
+                </p>
+            </details>
+        </div>
+        <button class="close-banner" onclick="this.parentElement.parentElement.style.display='none'">×</button>
+    </div>
+</div>
+
+<style>
+.prerequisite-banner {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-bottom: 2px solid #f59e0b;
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.prerequisite-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    position: relative;
+}
+
+.prerequisite-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.prerequisite-text h3 {
+    margin: 0 0 0.5rem 0;
+    color: #92400e;
+    font-size: 1.1rem;
+}
+
+.prerequisite-text p {
+    margin: 0;
+    color: #78350f;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.prerequisite-text a {
+    color: #2563eb;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.prerequisite-text a:hover {
+    color: #1d4ed8;
+}
+
+.prerequisite-text details {
+    margin-top: 0.75rem;
+}
+
+.prerequisite-text summary {
+    color: #92400e;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    list-style: none;
+    user-select: none;
+}
+
+.prerequisite-text summary::-webkit-details-marker {
+    display: none;
+}
+
+.prerequisite-text summary::before {
+    content: '▶ ';
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+.prerequisite-text details[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.close-banner {
+    background: none;
+    border: none;
+    color: #92400e;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.close-banner:hover {
+    background: rgba(146, 64, 14, 0.1);
+}
+
+@media (max-width: 768px) {
+    .prerequisite-content {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .prerequisite-icon {
+        font-size: 1.5rem;
+    }
+    
+    .close-banner {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+}
+</style>
     <nav class="navbar">
         <div class="nav-content">
             <div class="logo">
