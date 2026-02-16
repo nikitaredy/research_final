@@ -8,6 +8,14 @@ A professional AI-powered research portal for financial analysis with two specia
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-green.svg)
 ![Free](https://img.shields.io/badge/API-100%25%20Free-brightgreen.svg)
 
+## 🌐 Live Demo
+
+**Try it now:** [https://your-project-url.vercel.app](https://research-final-nine.vercel.app/)
+
+> 🎯 Upload a financial PDF and see AI-powered analysis in action!
+
+---
+
 ## ✨ Features
 
 - 🤖 **Dual AI Analysis** - Powered by Groq's Llama 3.3 70B model
