@@ -10,7 +10,7 @@ A professional AI-powered research portal for financial analysis with two specia
 
 ## 🌐 Live Demo
 
-**Try it now:** [https://your-project-url.vercel.app](https://research-final-nine.vercel.app/)
+**Try it now:** [LIVE DEMO](https://research-final-nine.vercel.app/)
 
 > 🎯 Upload a financial PDF and see AI-powered analysis in action!
 
